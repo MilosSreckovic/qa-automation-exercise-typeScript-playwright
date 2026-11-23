@@ -1,104 +1,135 @@
 
 # Playwright API Automation Framework
 
+[![Playwright API Tests](https://github.com/MilosSreckovic/qa-automation-exercise-typeScript-playwright/actions/workflows/playwright-api.yml/badge.svg)](https://github.com/MilosSreckovic/qa-automation-exercise-typeScript-playwright/actions/workflows/playwright-api.yml)
 
-[![Playwright API Tests](https://github.com/MilosSreckovic/QA-Automation-Exercise/actions/workflows/playwright-api.yml/badge.svg)](https://github.com/MilosSreckovic/QA-Automation-Exercise/actions/workflows/playwright-api.yml)
+A REST API test automation framework built with **Playwright and TypeScript**, using the Automation Exercise demo application.
 
-API test automation project built with **Playwright and TypeScript**, using the Automation Exercise demo application.
-
-The project demonstrates practical API testing techniques, including positive and negative test scenarios, response validation, test isolation, reusable test utilities, and test data cleanup.
-
-## Project Overview
-
-The main objective is to build a reliable, maintainable, and easy-to-understand API automation suite.
-
-The framework focuses on:
-
-- REST API functional testing
-- Positive and negative test scenarios
-- HTTP status and business response validation
-- API response structure and data validation
-- Independent test execution
-- Dynamic test data generation
-- Test account creation and cleanup
-- Parallel test execution
-- HTML reporting and CI-ready configuration
+The project demonstrates API testing, reusable framework architecture, positive and negative scenarios, dynamic test data, account lifecycle management, error handling, and CI integration.
 
 **Application under test:** https://automationexercise.com
 
 ## Technology Stack
 
 | Technology | Purpose |
-|------------|---------|
-| Playwright | API test automation |
-| TypeScript | Test implementation |
+|---|---|
+| Playwright | REST API test automation |
+| TypeScript | Strongly typed test implementation |
 | Node.js | JavaScript runtime |
 | npm | Dependency management |
-| Git & GitHub | Version control |
+| GitHub Actions | Continuous integration |
 | Playwright HTML Reporter | Test execution reporting |
+| Git & GitHub | Version control |
 
-The project uses Playwright's APIRequestContext for HTTP requests and does not require browser installation for API test execution.
+The framework uses Playwright's `APIRequestContext` and does not require a browser for API test execution.
 
 ## Test Coverage
 
-### Authentication API
+The suite currently contains **11 API tests**.
 
-- Verify login request with missing credentials
+### Authentication API — 7 Tests
+
+- Verify login with missing credentials
 - Create a new user account
 - Verify login with valid credentials
 - Delete an existing user account
+- Verify login with non-existing credentials
+- Retrieve user details with non-existing email
+- Retrieve user details with existing email
 
-### Products API
+### Products API — 2 Tests
 
-- Retrieve the product list
-- Validate product response structure
-- Verify product identifiers, names, prices, and brands
-- Verify unsupported HTTP method handling
+- Retrieve and validate the product list
+- Verify unsupported POST method handling
 
-Additional test scenarios are maintained in the project's test suite.
+### Search API — 2 Tests
 
-## Framework Design
+- Search products using a valid search term
+- Verify error handling when the required search parameter is missing
 
-### Test Independence
+## Framework Architecture
 
-Tests are designed to execute independently without relying on the execution order of other tests.
+### API Client
+
+The `ApiClient` class centralizes HTTP requests and provides reusable methods for API operations.
+
+This separates request implementation from test assertions and reduces duplicated code.
+
+### Centralized Endpoints
+
+API paths and the base URL are maintained in `config/api-endpoints.ts`.
+
+This improves maintainability and simplifies endpoint updates.
+
+### TypeScript Validation
+
+Strict TypeScript configuration is used to detect type-related issues before test execution.
 
 ### Dynamic Test Data
 
 Unique email addresses are generated for test accounts to reduce conflicts between executions.
 
-### Reusable Functions
+### Test Independence
 
-Common account operations are implemented as reusable functions to reduce code duplication and improve readability.
+Tests are designed to run independently without relying on execution order.
 
-### Test Data Cleanup
+### Account Lifecycle Management
 
-Tests that create accounts include cleanup logic to remove temporary test data.
+Reusable helper functions support account creation and deletion.
 
-Cleanup is attempted when the relevant test fails, although successful cleanup also depends on API availability and response handling.
+Tests that create accounts use cleanup logic to remove temporary data.
 
-### API Validation
+When account creation or deletion returns HTTP 503, the framework can check the account state before determining the outcome.
 
-Tests validate both HTTP status codes and application-specific response codes.
+Cleanup remains dependent on external API availability.
 
-Product responses are checked for expected data types and required values.
+### HTTP 503 Handling
+
+The Automation Exercise API may occasionally return HTTP 503 because of server overload.
+
+A limited retry mechanism is implemented for selected read-only operations.
+
+Account creation and deletion are handled separately to avoid blindly repeating operations that modify server state.
+
+### API Response Validation
+
+Tests validate:
+
+- HTTP status codes
+- Application-specific response codes
+- Expected response messages
+- Response data types
+- Required product attributes
+- User account information
+- Positive and negative API behavior
 
 ## Project Structure
 
 ```text
 QA-Automation-Exercise/
 |
+|-- .github/
+|   |-- workflows/
+|       |-- playwright-api.yml
+|
+|-- config/
+|   |-- api-endpoints.ts
+|
+|-- helpers/
+|   |-- api-client.ts
+|
 |-- tests/
 |   |-- api/
 |       |-- authentication-api.spec.ts
 |       |-- products-api.spec.ts
+|       |-- search-api.spec.ts
 |
 |-- playwright.config.ts
+|-- tsconfig.json
 |-- package.json
+|-- package-lock.json
 |-- README.md
 ```
-
-Additional documentation files provide information about test strategy, execution, exploratory testing, and improvement considerations.
 
 ## Getting Started
 
@@ -113,39 +144,51 @@ Additional documentation files provide information about test strategy, executio
 Clone the repository:
 
 ```bash
-git clone https://github.com/MilosSreckovic/QA-Automation-Exercise.git
+git clone https://github.com/MilosSreckovic/qa-automation-exercise-typeScript-playwright.git
 ```
 
-Navigate to the project directory:
+Navigate to the project:
 
 ```bash
-cd QA-Automation-Exercise
+cd qa-automation-exercise-typeScript-playwright
 ```
 
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
 ## Running Tests
 
-Run the complete test suite:
+Run TypeScript validation:
 
 ```bash
-npx playwright test
+npx tsc --noEmit
 ```
 
-Run authentication API tests:
+Run all API tests:
 
 ```bash
-npx playwright test authentication-api.spec.ts
+npx playwright test tests/api --workers=1
 ```
 
-Run products API tests:
+Run authentication tests:
 
 ```bash
-npx playwright test products-api.spec.ts
+npx playwright test tests/api/authentication-api.spec.ts --workers=1
+```
+
+Run products tests:
+
+```bash
+npx playwright test tests/api/products-api.spec.ts --workers=1
+```
+
+Run search tests:
+
+```bash
+npx playwright test tests/api/search-api.spec.ts --workers=1
 ```
 
 Run a specific test:
@@ -160,19 +203,24 @@ Open the HTML report:
 npx playwright show-report
 ```
 
-## Test Configuration
+## Continuous Integration
 
-The Playwright configuration includes:
+GitHub Actions executes the API automation suite on:
 
-- Parallel test execution
-- CI-specific retry configuration
-- CI worker limits
-- Test execution timeout
-- Centralized API base URL
-- HTML and console reporting
-- Trace collection on retries
+- Push to `main`
+- Pull requests targeting `main`
+- Manual workflow execution
 
-The configuration is intended to support both local execution and future CI/CD integration.
+The CI pipeline performs:
+
+1. Repository checkout
+2. Node.js setup
+3. Dependency installation using `npm ci`
+4. TypeScript type checking
+5. Playwright API test execution with one worker
+6. HTML test report artifact upload
+
+Test reports are retained for seven days.
 
 ## Test Strategy
 
@@ -180,29 +228,23 @@ The testing approach prioritizes:
 
 1. Critical API functionality
 2. Authentication and account management
-3. Product data integrity
-4. Negative scenarios and error handling
-5. Test reliability and maintainability
+3. Product data validation
+4. Search functionality
+5. Negative scenarios and error handling
+6. Test independence and maintainability
+7. Reliable cleanup and external service error handling
 
-Tests are designed to validate observable API behavior rather than implementation details.
+Tests validate observable API behavior rather than internal implementation details.
 
 ## Future Improvements
 
-- Expand negative API test coverage
-- Introduce API response schema validation
-- Improve test data management and cleanup reliability
-- Add GitHub Actions CI/CD execution
+- Introduce typed API response interfaces
+- Add JSON schema validation
+- Expand negative API coverage
+- Improve test data management
+- Strengthen cleanup recovery for ambiguous API failures
 - Introduce environment-based configuration
-- Extend API test coverage to additional endpoints
-
-## Additional Documentation
-
-The repository also includes supporting documentation covering:
-
-- Test strategy and planning
-- Test execution and configuration
-- Exploratory testing and reporting
-- Additional observations and improvement considerations
+- Extend API coverage to additional endpoints
 
 ## Author
 
@@ -213,3 +255,5 @@ Senior QA Automation Engineer
 6+ years of experience in test automation, API testing, performance engineering, and software quality assurance.
 
 **GitHub:** https://github.com/MilosSreckovic
+
+**Portfolio:** https://milossreckovic.github.io/

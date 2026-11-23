@@ -1,10 +1,11 @@
 
 import { test, expect } from '@playwright/test';
-
-const baseUrl = 'https://automationexercise.com/api';
+import { ApiClient } from '../../helpers/api-client';
 
 test('GET all products returns valid product list', async ({ request }) => {
-  const response = await request.get(`${baseUrl}/productsList`);
+  const apiClient = new ApiClient(request);
+
+  const response = await apiClient.getProducts();
 
   console.log('HTTP STATUS:', response.status());
   console.log('RESPONSE BODY:', (await response.text()).slice(0, 500));
@@ -33,14 +34,14 @@ test('GET all products returns valid product list', async ({ request }) => {
 });
 
 test('POST products list returns method not supported', async ({ request }) => {
-  const response = await request.post(`${baseUrl}/productsList`);
+  const apiClient = new ApiClient(request);
+
+  const response = await apiClient.postProducts();
 
   expect(response.status()).toBe(200);
 
   const body = await response.json();
 
   expect(body.responseCode).toBe(405);
-  expect(body.message).toBe(
-    'This request method is not supported.'
-  );
+  expect(body.message).toBe('This request method is not supported.');
 });
